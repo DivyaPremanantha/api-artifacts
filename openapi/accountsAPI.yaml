@@ -1,0 +1,236 @@
+openapi: 3.0.1
+info:
+  title: Accounts API
+  description: The Accounts API provides a set of operations to manage user accounts within the ACME platform. It allows clients to create new user accounts, retrieve account details, update account information, and delete accounts securely and efficiently.
+  version: '1.0'
+servers:
+  - url: https://stoplight.io/mocks/acme-devportal/acme/1127446030
+paths:
+  /accounts:
+    get:
+      tags:
+        - accounts
+      summary: List all accounts
+      description: Returns a list of all user accounts. Each account includes id, username, email, status, and creation date.
+      operationId: listAccounts
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accounts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/models.Account'
+    post:
+      tags:
+        - accounts
+      summary: Create a new account
+      description: Creates a new user account. Requires username, email, and initial status. The system automatically assigns an ID to the account.
+      operationId: createAccount
+      requestBody:
+        description: New account details (without ID)
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/models.AccountCreate'
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/models.Account'
+                  - type: object
+                    properties:
+                      note:
+                        type: string
+                        example: Please note this is a simulated account creation.
+        '400':
+          description: invalid account details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/utils.ErrorResponse'
+        '409':
+          description: duplicate account
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/utils.ErrorResponse'
+  /accounts/{id}:
+    get:
+      tags:
+        - accounts
+      summary: Get account by id
+      description: Fetches the details of a specific account by its unique ID. Returns 404 if not found.
+      operationId: getAccountById
+      parameters:
+        - name: id
+          in: path
+          description: Account ID
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/models.Account'
+        '404':
+          description: account not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/utils.ErrorResponse'
+    put:
+      tags:
+        - accounts
+      summary: Update an account by id
+      description: Updates the status or email of an existing account identified by its ID. Returns the updated account.
+      operationId: updateAccountById
+      parameters:
+        - name: id
+          in: path
+          description: Account ID
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Updated account details (email and/or status)
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/models.AccountUpdate'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/models.Account'
+                  - type: object
+                    properties:
+                      note:
+                        type: string
+                        example: Please note this is a simulated account update.
+        '400':
+          description: invalid account details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/utils.ErrorResponse'
+        '404':
+          description: account not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/utils.ErrorResponse'
+    delete:
+      tags:
+        - accounts
+      summary: Delete an account by id
+      description: Deletes the account with the given ID. Returns the ID of the deleted account if successful.
+      operationId: deleteAccountById
+      parameters:
+        - name: id
+          in: path
+          description: Account ID
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: abc12345-def6-7890-gh12-ijklmnopqrst
+                  note:
+                    type: string
+                    example: Please note this is a simulated deletion.
+        '404':
+          description: account not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/utils.ErrorResponse'
+components:
+  schemas:
+    models.Account:
+      type: object
+      properties:
+        id:
+          type: string
+          example: abc12345-def6-7890-gh12-ijklmnopqrst
+        username:
+          type: string
+          example: johndoe
+        email:
+          type: string
+          format: email
+          example: johndoe@example.com
+        status:
+          type: string
+          enum:
+            - active
+            - inactive
+            - suspended
+          example: active
+        createdAt:
+          type: string
+          format: date-time
+          example: 2025-07-27T10:00:00Z
+    models.AccountCreate:
+      type: object
+      required:
+        - username
+        - email
+      properties:
+        username:
+          type: string
+          example: johndoe
+        email:
+          type: string
+          format: email
+          example: johndoe@example.com
+        status:
+          type: string
+          enum:
+            - active
+            - inactive
+            - suspended
+          example: active
+    models.AccountUpdate:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: newemail@example.com
+        status:
+          type: string
+          enum:
+            - active
+            - inactive
+            - suspended
+          example: suspended
+    utils.ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: error message
